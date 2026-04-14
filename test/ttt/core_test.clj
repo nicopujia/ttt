@@ -1,5 +1,6 @@
 (ns ttt.core-test
-  (:require [clojure.test :refer [deftest is run-tests testing]]
+  (:require [clojure.string :as str]
+            [clojure.test :refer [deftest is run-tests testing]]
             [ttt.core :as core]))
 
 (def winning-positions
@@ -123,6 +124,63 @@
                  (core/render-board [nil nil nil] :x)))
     (is (thrown? clojure.lang.ExceptionInfo
                  (core/render-board (core/new-board) :z)))))
+
+(deftest parse-position-test
+  (is (= 1 (core/parse-position "1")))
+  (is (= 9 (core/parse-position " 9 ")))
+  (doseq [input [nil "" "  " "0" "10" "1.0" "x" "1x"]]
+    (is (nil? (core/parse-position input)))))
+
+(deftest validate-input-test
+  (testing "open cells return a parsed position"
+    (is (= {:position 5}
+           (core/validate-input (core/new-board) "5"))))
+  (testing "occupied cells return a descriptive error"
+    (let [board (core/make-move (core/new-board) 5 :x)]
+      (is (= {:error core/occupied-cell-message}
+             (core/validate-input board "5")))))
+  (testing "malformed input returns a descriptive error"
+    (is (= {:error core/invalid-input-message}
+           (core/validate-input (core/new-board) "ten")))))
+
+(deftest final-message-test
+  (is (= "X wins! Game over."
+         (core/final-message (board-with-moves [[1 :x] [4 :o] [2 :x] [5 :o] [3 :x]]))))
+  (is (= "It's a draw! Game over."
+         (core/final-message draw-board)))
+  (is (thrown? clojure.lang.ExceptionInfo
+               (core/final-message (core/new-board)))))
+
+(deftest cli-win-flow-test
+  (let [output (with-in-str "1\n4\n2\n5\n3\n"
+                 (with-out-str (core/-main)))]
+    (is (str/includes? output "X wins! Game over."))
+    (is (str/includes? output " X | X | X "))
+    (is (= 3 (count (re-seq #"X's turn\. Enter 1-9: " output))))
+    (is (= 2 (count (re-seq #"O's turn\. Enter 1-9: " output))))))
+
+(deftest cli-draw-flow-test
+  (let [output (with-in-str "1\n2\n3\n5\n4\n6\n8\n7\n9\n"
+                 (with-out-str (core/-main)))]
+    (is (str/includes? output "It's a draw! Game over."))
+    (is (= 5 (count (re-seq #"X's turn\. Enter 1-9: " output))))
+    (is (= 4 (count (re-seq #"O's turn\. Enter 1-9: " output))))))
+
+(deftest cli-invalid-input-reprompt-test
+  (let [output (with-in-str "q\n10\n1\n4\n2\n5\n3\n"
+                 (with-out-str (core/-main)))]
+    (is (= 2 (count (re-seq #"Invalid input\. Enter a number 1-9\." output))))
+    (is (str/includes? output "X wins! Game over."))
+    (is (= 5 (count (re-seq #"X's turn\. Enter 1-9: " output))))
+    (is (= 2 (count (re-seq #"O's turn\. Enter 1-9: " output))))))
+
+(deftest cli-occupied-cell-reprompt-test
+  (let [output (with-in-str "1\n1\n4\n2\n5\n3\n"
+                 (with-out-str (core/-main)))]
+    (is (= 1 (count (re-seq #"Cell already occupied\. Choose another position\." output))))
+    (is (str/includes? output "X wins! Game over."))
+    (is (= 3 (count (re-seq #"X's turn\. Enter 1-9: " output))))
+    (is (= 3 (count (re-seq #"O's turn\. Enter 1-9: " output))))))
 
 (defn -main
   [& _args]

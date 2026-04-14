@@ -20,6 +20,12 @@
 
 (def row-separator "---+---+---")
 
+(def invalid-input-message "Invalid input. Enter a number 1-9.")
+
+(def occupied-cell-message "Cell already occupied. Choose another position.")
+
+(def no-input-message "No input received. Exiting.")
+
 (defn new-board
   []
   (game/empty-board))
@@ -121,10 +127,78 @@
        "\n"
        (render-row board [7 8 9])))
 
-(defn startup-message
-  []
-  (str "ttt scaffold ready with " (count (new-board)) " cells."))
+(defn parse-position
+  [input]
+  (let [trimmed-input (some-> input str/trim)]
+    (when (and trimmed-input
+               (re-matches #"[1-9]" trimmed-input))
+      (Integer/parseInt trimmed-input))))
+
+(defn validate-input
+  [board input]
+  (if-some [position (parse-position input)]
+    (if (valid-move? board position)
+      {:position position}
+      {:error occupied-cell-message})
+    {:error invalid-input-message}))
+
+(defn game-result
+  [board]
+  (when-not (game/board? board)
+    (throw (ex-info "Invalid board" {:board board})))
+  (if-some [winning-player (winner board)]
+    {:status :won :winner winning-player}
+    (if (full? board)
+      {:status :draw}
+      {:status :playing})))
+
+(defn final-message
+  [board]
+  (let [{:keys [status winner]} (game-result board)]
+    (case status
+      :won (str (player->label winner) " wins! Game over.")
+      :draw "It's a draw! Game over."
+      (throw (ex-info "Game is not over" {:board board :status status})))))
+
+(defn- prompt-input
+  [player]
+  (print (str (player->label player) "'s turn. Enter 1-9: "))
+  (flush)
+  (read-line))
 
 (defn -main
   [& _args]
-  (println (startup-message)))
+  (letfn [(resolve-turn [board player]
+            (if-some [input (prompt-input player)]
+              (let [{:keys [position error]} (validate-input board input)]
+                (if error
+                  (do
+                    (println error)
+                    (recur board player))
+                  (let [updated-board (make-move board position player)
+                        {:keys [status winner]} (game-result updated-board)]
+                    (case status
+                      :playing {:status :playing
+                                :board updated-board
+                                :next-player (next-player player)}
+                      :won {:status :won
+                            :board updated-board
+                            :current-player player
+                            :winner winner}
+                      :draw {:status :draw
+                             :board updated-board
+                             :current-player player}))))
+              {:status :eof}))
+          (game-loop [board player]
+            (println (render-board board player))
+            (let [{:keys [status board next-player current-player winner]} (resolve-turn board player)]
+              (case status
+                :playing (recur board next-player)
+                :won (do
+                       (println (render-board board winner))
+                       (println (final-message board)))
+                :draw (do
+                        (println (render-board board current-player))
+                        (println (final-message board)))
+                :eof (println no-input-message))))]
+    (game-loop (new-board) :x)))
