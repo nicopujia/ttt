@@ -24,6 +24,13 @@
           (core/new-board)
           moves))
 
+(defn board-with-player-positions
+  [player positions]
+  (reduce (fn [board position]
+            (assoc board (dec position) player))
+          (core/new-board)
+          positions))
+
 (deftest new-board-test
   (let [board (core/new-board)]
     (is (vector? board))
@@ -49,11 +56,10 @@
 
 (deftest make-move-test
   (testing "make-move maps positions to zero-based indexes"
-    (let [board (core/new-board)
-          with-x (core/make-move board 1 :x)
-          with-o (core/make-move board 9 :o)]
-      (is (= :x (nth with-x 0)))
-      (is (= :o (nth with-o 8)))))
+    (doseq [position (range 1 10)]
+      (let [board (core/make-move (core/new-board) position :x)
+            expected-board (assoc (core/new-board) (dec position) :x)]
+        (is (= expected-board board)))))
   (testing "make-move does not mutate the original board"
     (let [board (core/new-board)
           updated-board (core/make-move board 5 :x)]
@@ -78,7 +84,7 @@
     (doseq [player [:x :o]
             line winning-positions]
       (is (= player
-             (core/winner (board-with-moves (map #(vector % player) line)))))))
+             (core/winner (board-with-player-positions player line))))))
   (testing "non-winning boards return nil"
     (is (nil? (core/winner (board-with-moves [[1 :x] [2 :x] [5 :o]]))))
     (is (nil? (core/winner draw-board)))
@@ -87,6 +93,7 @@
 (deftest full?-test
   (is (false? (core/full? (core/new-board))))
   (is (true? (core/full? draw-board)))
+  (is (true? (core/full? [:x :x :x :o :o :x :o :x :o])))
   (is (false? (core/full? [nil nil nil]))))
 
 (deftest game-over?-test
@@ -94,7 +101,8 @@
     (is (true? (core/game-over? winning-board)))
     (is (true? (core/game-over? draw-board)))
     (is (false? (core/game-over? (board-with-moves [[1 :x] [5 :o]]))))
-    (is (true? (core/game-over? (board-with-moves [[1 :x] [2 :x] [3 :x]]))))))
+    (is (true? (core/game-over? (board-with-moves [[1 :x] [2 :x] [3 :x]]))))
+    (is (false? (core/game-over? [nil nil nil])))))
 
 (defn -main
   [& _args]

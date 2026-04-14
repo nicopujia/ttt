@@ -1,0 +1,1 @@
+- Run unit tests with `clojure -M -m ttt.core-test`; the test namespace exposes a `-main` that exits nonzero on failures.
