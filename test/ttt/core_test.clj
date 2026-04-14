@@ -104,6 +104,26 @@
     (is (true? (core/game-over? (board-with-moves [[1 :x] [2 :x] [3 :x]]))))
     (is (false? (core/game-over? [nil nil nil])))))
 
+(deftest next-player-test
+  (is (= :o (core/next-player :x)))
+  (is (= :x (core/next-player :o)))
+  (is (thrown? clojure.lang.ExceptionInfo
+               (core/next-player :z))))
+
+(deftest render-board-test
+  (testing "an empty board renders numbered cells and the turn header"
+    (is (= "Tic Tac Toe\n\nX's turn\n\n 1 | 2 | 3 \n---+---+---\n 4 | 5 | 6 \n---+---+---\n 7 | 8 | 9 "
+           (core/render-board (core/new-board) :x))))
+  (testing "a partial board renders symbols in centered cells"
+    (let [board (board-with-moves [[1 :x] [2 :o] [5 :x] [7 :o]])]
+      (is (= "Tic Tac Toe\n\nO's turn\n\n X | O | 3 \n---+---+---\n 4 | X | 6 \n---+---+---\n O | 8 | 9 "
+             (core/render-board board :o)))))
+  (testing "render-board validates inputs"
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (core/render-board [nil nil nil] :x)))
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (core/render-board (core/new-board) :z)))))
+
 (defn -main
   [& _args]
   (let [{:keys [fail error]} (run-tests 'ttt.core-test)]

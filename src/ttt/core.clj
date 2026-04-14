@@ -1,5 +1,6 @@
 (ns ttt.core
-  (:require [ttt.game :as game]))
+  (:require [clojure.string :as str]
+            [ttt.game :as game]))
 
 (def board-size 9)
 
@@ -14,6 +15,10 @@
    [2 4 6]])
 
 (def players #{:x :o})
+
+(def title-line "Tic Tac Toe")
+
+(def row-separator "---+---+---")
 
 (defn new-board
   []
@@ -72,6 +77,49 @@
   [board]
   (boolean (or (winner board)
                (full? board))))
+
+(defn- player->label
+  [player]
+  (case player
+    :x "X"
+    :o "O"
+    (throw (ex-info "Invalid player" {:player player}))))
+
+(defn next-player
+  [player]
+  (case player
+    :x :o
+    :o :x
+    (throw (ex-info "Invalid player" {:player player}))))
+
+(defn- cell-display
+  [board position]
+  (case (nth board (position->index position))
+    :x " X "
+    :o " O "
+    (format " %d " position)))
+
+(defn- render-row
+  [board positions]
+  (str/join "|" (map #(cell-display board %) positions)))
+
+(defn render-board
+  [board player]
+  (when-not (game/board? board)
+    (throw (ex-info "Invalid board" {:board board})))
+  (str title-line
+       "\n\n"
+       (player->label player)
+       "'s turn\n\n"
+       (render-row board [1 2 3])
+       "\n"
+       row-separator
+       "\n"
+       (render-row board [4 5 6])
+       "\n"
+       row-separator
+       "\n"
+       (render-row board [7 8 9])))
 
 (defn startup-message
   []
