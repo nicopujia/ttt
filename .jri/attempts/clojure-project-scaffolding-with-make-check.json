@@ -1,0 +1,15 @@
+{
+  "attempts": [
+    {
+      "branch": "ralph",
+      "finished_at": 1776193777,
+      "log_path": "/home/nico/ttt/.jri/logs/ralph/clojure-project-scaffolding-with-make-check-2026-04-14T19-09-37Z.log",
+      "number": 1,
+      "result": "failed",
+      "session_id": "ses_27299d0b6ffeDUBepBD20AstZq",
+      "started_at": 1776193777,
+      "task_slug": "clojure-project-scaffolding-with-make-check"
+    }
+  ],
+  "task_slug": "clojure-project-scaffolding-with-make-check"
+}
