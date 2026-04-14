@@ -1,0 +1,15 @@
+{
+  "attempts": [
+    {
+      "branch": "ralph",
+      "finished_at": 1776194750,
+      "log_path": "/home/nico/ttt/.jri/logs/ralph/pure-game-logic-board-moves-win-draw-detection-2026-04-14T19-17-35Z.log",
+      "number": 3,
+      "result": "completed",
+      "session_id": "ses_272928673ffe0A0HLbZXJTpF0J",
+      "started_at": 1776194255,
+      "task_slug": "pure-game-logic-board-moves-win-draw-detection"
+    }
+  ],
+  "task_slug": "pure-game-logic-board-moves-win-draw-detection"
+}
