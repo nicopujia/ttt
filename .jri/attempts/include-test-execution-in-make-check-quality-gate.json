@@ -1,0 +1,15 @@
+{
+  "attempts": [
+    {
+      "branch": "ralph",
+      "finished_at": 1776206937,
+      "log_path": "/home/nico/ttt/.jri/logs/ralph/include-test-execution-in-make-check-quality-gate-2026-04-14T22-48-56Z.log",
+      "number": 5,
+      "result": "failed",
+      "session_id": "ses_271d10469ffenpkmGcc25tCyJZ",
+      "started_at": 1776206936,
+      "task_slug": "include-test-execution-in-make-check-quality-gate"
+    }
+  ],
+  "task_slug": "include-test-execution-in-make-check-quality-gate"
+}
