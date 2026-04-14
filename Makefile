@@ -1,5 +1,4 @@
 .PHONY: check
 
 check:
-	@echo "make check is not configured yet"
-	@false
+	@clj-kondo --lint src test

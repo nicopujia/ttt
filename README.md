@@ -13,7 +13,8 @@ A command-line Tic Tac Toe game for two human players (hotseat).
 ## Usage
 
 ```bash
-make          # or clojure -M:run
+make check
+clojure -M:run -m ttt.core
 ```
 
 Enter numbers 1-9 when prompted.
