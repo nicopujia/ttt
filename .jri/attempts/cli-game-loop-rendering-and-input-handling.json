@@ -1,0 +1,15 @@
+{
+  "attempts": [
+    {
+      "branch": "ralph",
+      "finished_at": 1776195385,
+      "log_path": "/home/nico/ttt/.jri/logs/ralph/cli-game-loop-rendering-and-input-handling-2026-04-14T19-25-50Z.log",
+      "number": 4,
+      "result": "completed",
+      "session_id": "ses_2728af5faffew6FcexWzZig0yZ",
+      "started_at": 1776194750,
+      "task_slug": "cli-game-loop-rendering-and-input-handling"
+    }
+  ],
+  "task_slug": "cli-game-loop-rendering-and-input-handling"
+}
