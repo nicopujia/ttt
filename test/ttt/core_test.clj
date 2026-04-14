@@ -1,0 +1,102 @@
+(ns ttt.core-test
+  (:require [clojure.test :refer [deftest is run-tests testing]]
+            [ttt.core :as core]))
+
+(def winning-positions
+  [[1 2 3]
+   [4 5 6]
+   [7 8 9]
+   [1 4 7]
+   [2 5 8]
+   [3 6 9]
+   [1 5 9]
+   [3 5 7]])
+
+(def draw-board
+  [:x :o :x
+   :x :o :o
+   :o :x :x])
+
+(defn board-with-moves
+  [moves]
+  (reduce (fn [board [position player]]
+            (core/make-move board position player))
+          (core/new-board)
+          moves))
+
+(deftest new-board-test
+  (let [board (core/new-board)]
+    (is (vector? board))
+    (is (= 9 (count board)))
+    (is (every? nil? board))))
+
+(deftest valid-move?-test
+  (testing "open positions are valid"
+    (doseq [position [1 5 9]]
+      (is (true? (core/valid-move? (core/new-board) position)))))
+  (testing "occupied positions are invalid"
+    (let [board (core/make-move (core/new-board) 5 :x)]
+      (is (false? (core/valid-move? board 5)))))
+  (testing "out-of-range positions are invalid"
+    (doseq [position [0 10 -1]]
+      (is (false? (core/valid-move? (core/new-board) position)))))
+  (testing "non-integer positions are invalid"
+    (doseq [position [nil "1" 1.0 :one]]
+      (is (false? (core/valid-move? (core/new-board) position)))))
+  (testing "malformed boards are invalid"
+    (doseq [board [nil [] [nil nil nil] [:x :o :z nil nil nil nil nil nil]]]
+      (is (false? (core/valid-move? board 1))))))
+
+(deftest make-move-test
+  (testing "make-move maps positions to zero-based indexes"
+    (let [board (core/new-board)
+          with-x (core/make-move board 1 :x)
+          with-o (core/make-move board 9 :o)]
+      (is (= :x (nth with-x 0)))
+      (is (= :o (nth with-o 8)))))
+  (testing "make-move does not mutate the original board"
+    (let [board (core/new-board)
+          updated-board (core/make-move board 5 :x)]
+      (is (= (core/new-board) board))
+      (is (= [nil nil nil nil :x nil nil nil nil] updated-board))))
+  (testing "sequential legal moves produce the expected board"
+    (is (= [:x nil nil nil :o nil nil nil :x]
+           (board-with-moves [[1 :x] [5 :o] [9 :x]]))))
+  (testing "invalid moves throw"
+    (let [board (core/make-move (core/new-board) 5 :x)]
+      (is (thrown? clojure.lang.ExceptionInfo
+                   (core/make-move board 5 :o)))
+      (is (thrown? clojure.lang.ExceptionInfo
+                   (core/make-move board 0 :o)))
+      (is (thrown? clojure.lang.ExceptionInfo
+                   (core/make-move board 1 :z)))
+      (is (thrown? clojure.lang.ExceptionInfo
+                   (core/make-move [nil nil nil] 1 :x))))))
+
+(deftest winner-test
+  (testing "all winning lines are detected for both players"
+    (doseq [player [:x :o]
+            line winning-positions]
+      (is (= player
+             (core/winner (board-with-moves (map #(vector % player) line)))))))
+  (testing "non-winning boards return nil"
+    (is (nil? (core/winner (board-with-moves [[1 :x] [2 :x] [5 :o]]))))
+    (is (nil? (core/winner draw-board)))
+    (is (nil? (core/winner [nil nil nil])))))
+
+(deftest full?-test
+  (is (false? (core/full? (core/new-board))))
+  (is (true? (core/full? draw-board)))
+  (is (false? (core/full? [nil nil nil]))))
+
+(deftest game-over?-test
+  (let [winning-board (board-with-moves [[1 :x] [2 :o] [5 :x] [3 :o] [9 :x]])]
+    (is (true? (core/game-over? winning-board)))
+    (is (true? (core/game-over? draw-board)))
+    (is (false? (core/game-over? (board-with-moves [[1 :x] [5 :o]]))))
+    (is (true? (core/game-over? (board-with-moves [[1 :x] [2 :x] [3 :x]]))))))
+
+(defn -main
+  [& _args]
+  (let [{:keys [fail error]} (run-tests 'ttt.core-test)]
+    (System/exit (if (zero? (+ fail error)) 0 1))))
