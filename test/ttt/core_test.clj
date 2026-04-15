@@ -114,7 +114,7 @@
 (defn- strip-ansi
   "Remove ANSI escape codes from text"
   [text]
-  (str/replace text #"\u001B\[[0-9;]*m" ""))
+  (str/replace text #"\u001B\[[0-?]*[ -/]*[@-~]" ""))
 
 (deftest render-board-test
   (testing "an empty board renders numbered cells and the turn header"
@@ -181,39 +181,70 @@
          (core/render-score {:x 2 :o 1 :draws 3}))))
 
 (deftest cli-win-flow-test
+  (let [output (with-in-str "1\n4\n2\n5\n3\nn\n"
+                 (with-out-str (core/-main)))
+         stripped-output (strip-ansi output)]
+     (is (str/includes? stripped-output "X wins! Game over."))
+     (is (str/includes? stripped-output "Score (X : O : Draws) 1 : 0 : 0"))
+     (is (str/includes? stripped-output "Play again? (y/n)"))
+     (is (str/includes? stripped-output " X | X | X "))
+     (is (= 3 (count (re-seq #"X's turn\. Enter 1-9: " stripped-output))))
+     (is (= 2 (count (re-seq #"O's turn\. Enter 1-9: " stripped-output))))))
+
+(deftest cli-draw-flow-test
+  (let [output (with-in-str "1\n2\n3\n5\n4\n6\n8\n7\n9\nn\n"
+                 (with-out-str (core/-main)))
+         stripped-output (strip-ansi output)]
+     (is (str/includes? stripped-output "It's a draw! Game over."))
+     (is (str/includes? stripped-output "Score (X : O : Draws) 0 : 0 : 1"))
+     (is (str/includes? stripped-output "Play again? (y/n)"))
+     (is (= 5 (count (re-seq #"X's turn\. Enter 1-9: " stripped-output))))
+     (is (= 4 (count (re-seq #"O's turn\. Enter 1-9: " stripped-output))))))
+
+(deftest cli-invalid-input-reprompt-test
+  (let [output (with-in-str "q\n10\n1\n4\n2\n5\n3\nn\n"
+                 (with-out-str (core/-main)))
+         stripped-output (strip-ansi output)]
+     (is (= 2 (count (re-seq #"Invalid input\. Enter a number 1-9\." stripped-output))))
+     (is (str/includes? stripped-output "X wins! Game over."))
+     (is (= 5 (count (re-seq #"X's turn\. Enter 1-9: " stripped-output))))
+     (is (= 2 (count (re-seq #"O's turn\. Enter 1-9: " stripped-output))))))
+
+(deftest cli-occupied-cell-reprompt-test
+  (let [output (with-in-str "1\n1\n4\n2\n5\n3\nn\n"
+                 (with-out-str (core/-main)))
+         stripped-output (strip-ansi output)]
+     (is (= 1 (count (re-seq #"Cell already occupied\. Choose another position\." stripped-output))))
+     (is (str/includes? stripped-output "X wins! Game over."))
+     (is (= 3 (count (re-seq #"X's turn\. Enter 1-9: " stripped-output))))
+     (is (= 3 (count (re-seq #"O's turn\. Enter 1-9: " stripped-output))))))
+
+(deftest cli-play-again-loop-test
+  (let [output (with-in-str "1\n4\n2\n5\n3\ny\n1\n2\n3\n5\n4\n6\n8\n7\n9\nn\n"
+                 (with-out-str (core/-main)))
+        stripped-output (strip-ansi output)]
+    (is (= 2 (count (re-seq #"Tic Tac Toe\n\nX's turn\n\n 1 \| 2 \| 3 " stripped-output))))
+    (is (str/includes? stripped-output "Score (X : O : Draws) 1 : 0 : 0"))
+    (is (str/includes? stripped-output "Score (X : O : Draws) 1 : 0 : 1"))
+    (is (= 2 (count (re-seq #"Play again\? \(y/n\)" stripped-output))))
+    (is (= 8 (count (re-seq #"X's turn\. Enter 1-9: " stripped-output))))
+    (is (= 6 (count (re-seq #"O's turn\. Enter 1-9: " stripped-output))))))
+
+(deftest cli-invalid-play-again-reprompt-test
+  (let [output (with-in-str "1\n4\n2\n5\n3\nmaybe\nn\n"
+                 (with-out-str (core/-main)))
+        stripped-output (strip-ansi output)]
+    (is (= 1 (count (re-seq #"Invalid input\. Enter y or n\." stripped-output))))
+    (is (= 2 (count (re-seq #"Play again\? \(y/n\)" stripped-output))))
+    (is (= 1 (count (re-seq #"Score \(X : O : Draws\) 1 : 0 : 0" stripped-output))))))
+
+(deftest cli-play-again-eof-test
   (let [output (with-in-str "1\n4\n2\n5\n3\n"
                  (with-out-str (core/-main)))
         stripped-output (strip-ansi output)]
-    (is (str/includes? stripped-output "X wins! Game over."))
-    (is (str/includes? stripped-output " X | X | X "))
-    (is (= 3 (count (re-seq #"X's turn\. Enter 1-9: " stripped-output))))
-    (is (= 2 (count (re-seq #"O's turn\. Enter 1-9: " stripped-output))))))
-
-(deftest cli-draw-flow-test
-  (let [output (with-in-str "1\n2\n3\n5\n4\n6\n8\n7\n9\n"
-                 (with-out-str (core/-main)))
-        stripped-output (strip-ansi output)]
-    (is (str/includes? stripped-output "It's a draw! Game over."))
-    (is (= 5 (count (re-seq #"X's turn\. Enter 1-9: " stripped-output))))
-    (is (= 4 (count (re-seq #"O's turn\. Enter 1-9: " stripped-output))))))
-
-(deftest cli-invalid-input-reprompt-test
-  (let [output (with-in-str "q\n10\n1\n4\n2\n5\n3\n"
-                 (with-out-str (core/-main)))
-        stripped-output (strip-ansi output)]
-    (is (= 2 (count (re-seq #"Invalid input\. Enter a number 1-9\." stripped-output))))
-    (is (str/includes? stripped-output "X wins! Game over."))
-    (is (= 5 (count (re-seq #"X's turn\. Enter 1-9: " stripped-output))))
-    (is (= 2 (count (re-seq #"O's turn\. Enter 1-9: " stripped-output))))))
-
-(deftest cli-occupied-cell-reprompt-test
-  (let [output (with-in-str "1\n1\n4\n2\n5\n3\n"
-                 (with-out-str (core/-main)))
-        stripped-output (strip-ansi output)]
-    (is (= 1 (count (re-seq #"Cell already occupied\. Choose another position\." stripped-output))))
-    (is (str/includes? stripped-output "X wins! Game over."))
-    (is (= 3 (count (re-seq #"X's turn\. Enter 1-9: " stripped-output))))
-    (is (= 3 (count (re-seq #"O's turn\. Enter 1-9: " stripped-output))))))
+    (is (str/includes? stripped-output core/no-input-message))
+    (is (str/includes? stripped-output "Score (X : O : Draws) 1 : 0 : 0"))
+    (is (= 1 (count (re-seq #"Play again\? \(y/n\)" stripped-output))))))
 
 (defn -main
   [& _args]

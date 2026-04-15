@@ -27,6 +27,14 @@
 
 (def no-input-message "No input received. Exiting.")
 
+(def play-again-prompt (color/warning-style "Play again? (y/n) "))
+
+(def invalid-play-again-message (color/x-style "Invalid input. Enter y or n."))
+
+(def goodbye-message (color/success-style "Thanks for playing!"))
+
+(def clear-screen-sequence "\u001B[2J\u001B[H")
+
 (def initial-scores {:x 0 :o 0 :draws 0})
 
 (defn new-board
@@ -133,6 +141,22 @@
   [board positions winning-cells]
   (str/join (color/dim-style "|") (map #(cell-display board % winning-cells) positions)))
 
+(defn- render-board-display
+  [board header winning-cells]
+  (str (color/bold-style title-line)
+       "\n\n"
+       header
+       "\n\n"
+       (render-row board [1 2 3] winning-cells)
+       "\n"
+       row-separator
+       "\n"
+       (render-row board [4 5 6] winning-cells)
+       "\n"
+       row-separator
+       "\n"
+       (render-row board [7 8 9] winning-cells)))
+
 (defn render-board
   ([board player]
    (render-board board player nil))
@@ -140,23 +164,11 @@
    (when-not (game/board? board)
      (throw (ex-info "Invalid board" {:board board})))
    (let [winning-cells (when winner
-                         (winning-positions board))
-         turn-message (if winner
-                        (str (color/bold-style (color/success-style (str (player->label winner) " wins!"))))
-                        (str (player->label player) "'s turn"))]
-     (str (color/bold-style title-line)
-          "\n\n"
-          turn-message
-          "\n\n"
-          (render-row board [1 2 3] winning-cells)
-          "\n"
-          row-separator
-          "\n"
-          (render-row board [4 5 6] winning-cells)
-          "\n"
-          row-separator
-          "\n"
-          (render-row board [7 8 9] winning-cells)))))
+                          (winning-positions board))
+         header (if winner
+                  (str (color/bold-style (color/success-style (str (player->label winner) " wins!"))))
+                  (str (player->label player) "'s turn"))]
+     (render-board-display board header winning-cells))))
 
 (defn parse-position
   [input]
@@ -210,11 +222,44 @@
   [{:keys [x o draws]}]
   (str "Score (X : O : Draws) " x " : " o " : " draws))
 
+(defn render-final-screen
+  [board scores]
+  (let [{:keys [status winner]} (game-result board)
+        winning-cells (when winner
+                        (winning-positions board))
+        header (case status
+                 :won (str (color/bold-style (color/success-style (str (player->label winner) " wins!"))))
+                 :draw (str (color/bold-style (color/warning-style "It's a draw!")))
+                 (throw (ex-info "Game is not over" {:board board :status status}))) ]
+    (str (render-board-display board header winning-cells)
+         "\n\n"
+         (final-message board)
+         "\n"
+         (render-score scores))))
+
 (defn- prompt-input
   [player]
   (print (str (player->label player) "'s turn. Enter 1-9: "))
   (flush)
   (read-line))
+
+(defn- prompt-play-again
+  []
+  (loop []
+    (print play-again-prompt)
+    (flush)
+    (if-some [input (read-line)]
+      (if-some [choice (parse-play-again-choice input)]
+        choice
+        (do
+          (println invalid-play-again-message)
+          (recur)))
+      :eof)))
+
+(defn- display-screen
+  [content]
+  (print clear-screen-sequence)
+  (println content))
 
 (defn -main
   [& _args]
@@ -240,15 +285,32 @@
                              :current-player player}))))
               {:status :eof}))
           (game-loop [board player]
-            (println (render-board board player))
+            (display-screen (render-board board player))
             (let [{:keys [status board next-player current-player winner]} (resolve-turn board player)]
               (case status
                 :playing (recur board next-player)
-                :won (do
-                       (println (render-board board current-player winner))
-                       (println (final-message board)))
-                :draw (do
-                        (println (render-board board current-player))
-                        (println (final-message board)))
+                :won {:status :won
+                      :board board
+                      :current-player current-player
+                      :winner winner}
+                :draw {:status :draw
+                       :board board
+                       :current-player current-player}
+                :eof {:status :eof})))
+          (session-loop [scores]
+            (let [{:keys [status board] :as result} (game-loop (new-board) :x)]
+              (case status
+                :won (let [updated-scores (update-scores scores result)]
+                       (display-screen (render-final-screen board updated-scores))
+                       (case (prompt-play-again)
+                         :yes (recur updated-scores)
+                         :no (println goodbye-message)
+                         :eof (println no-input-message)))
+                :draw (let [updated-scores (update-scores scores result)]
+                        (display-screen (render-final-screen board updated-scores))
+                        (case (prompt-play-again)
+                          :yes (recur updated-scores)
+                          :no (println goodbye-message)
+                          :eof (println no-input-message)))
                 :eof (println no-input-message))))]
-    (game-loop (new-board) :x)))
+    (session-loop initial-scores)))

@@ -8,7 +8,7 @@ A command-line Tic Tac Toe game for two human players (hotseat).
 - ASCII board display with numbers for empty cells.
 - Input validation with re-prompt on errors.
 - Detects wins (8 lines) and draws.
-- Exits after game ends (no replay).
+- Play-again loop with running score tracking.
 
 ## Usage
 
@@ -17,7 +17,7 @@ make check
 clojure -M:run -m ttt.core
 ```
 
-Enter numbers 1-9 when prompted.
+Enter numbers 1-9 when prompted, then choose whether to play again.
 
 See `.jri/tasks/todo/` for detailed implementation tasks and acceptance criteria. All core logic is pure functions; I/O is isolated to `-main`.
 
