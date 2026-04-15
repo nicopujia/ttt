@@ -27,6 +27,8 @@
 
 (def no-input-message "No input received. Exiting.")
 
+(def initial-scores {:x 0 :o 0 :draws 0})
+
 (defn new-board
   []
   (game/empty-board))
@@ -188,6 +190,25 @@
       :won (color/success-style (str (player->label winner) " wins! Game over."))
       :draw (color/warning-style "It's a draw! Game over.")
       (throw (ex-info "Game is not over" {:board board :status status})))))
+
+(defn parse-play-again-choice
+  [input]
+  (let [normalized-input (some-> input str/trim str/lower-case)]
+    (case normalized-input
+      "y" :yes
+      "n" :no
+      nil)))
+
+(defn update-scores
+  [scores {:keys [status winner]}]
+  (case status
+    :won (update scores winner inc)
+    :draw (update scores :draws inc)
+    scores))
+
+(defn render-score
+  [{:keys [x o draws]}]
+  (str "Score (X : O : Draws) " x " : " o " : " draws))
 
 (defn- prompt-input
   [player]

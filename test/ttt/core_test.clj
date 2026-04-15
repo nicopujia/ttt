@@ -156,6 +156,30 @@
   (is (thrown? clojure.lang.ExceptionInfo
                (core/final-message (core/new-board)))))
 
+(deftest parse-play-again-choice-test
+  (doseq [input ["y" "Y" " y "]]
+    (is (= :yes (core/parse-play-again-choice input))))
+  (doseq [input ["n" "N" " n "]]
+    (is (= :no (core/parse-play-again-choice input))))
+  (doseq [input [nil "" "  " "yes" "no" "1" "maybe"]]
+    (is (nil? (core/parse-play-again-choice input)))))
+
+(deftest update-scores-test
+  (is (= {:x 1 :o 0 :draws 0}
+         (core/update-scores core/initial-scores {:status :won :winner :x})))
+  (is (= {:x 0 :o 1 :draws 0}
+         (core/update-scores core/initial-scores {:status :won :winner :o})))
+  (is (= {:x 0 :o 0 :draws 1}
+         (core/update-scores core/initial-scores {:status :draw})))
+  (is (= core/initial-scores
+         (core/update-scores core/initial-scores {:status :playing}))))
+
+(deftest render-score-test
+  (is (= "Score (X : O : Draws) 0 : 0 : 0"
+         (core/render-score core/initial-scores)))
+  (is (= "Score (X : O : Draws) 2 : 1 : 3"
+         (core/render-score {:x 2 :o 1 :draws 3}))))
+
 (deftest cli-win-flow-test
   (let [output (with-in-str "1\n4\n2\n5\n3\n"
                  (with-out-str (core/-main)))
