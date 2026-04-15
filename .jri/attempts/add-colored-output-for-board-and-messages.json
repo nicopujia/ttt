@@ -1,0 +1,15 @@
+{
+  "attempts": [
+    {
+      "branch": "ralph",
+      "finished_at": 1776216129,
+      "log_path": "/home/nico/ttt/.jri/logs/ralph/add-colored-output-for-board-and-messages-2026-04-15T01-03-36Z.log",
+      "number": 8,
+      "result": "completed",
+      "session_id": "ses_27155babdffef0ByOeHdwd6BIh",
+      "started_at": 1776215016,
+      "task_slug": "add-colored-output-for-board-and-messages"
+    }
+  ],
+  "task_slug": "add-colored-output-for-board-and-messages"
+}
