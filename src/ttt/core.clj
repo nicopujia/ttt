@@ -19,6 +19,31 @@
 
 (def title-line "Tic Tac Toe")
 
+(def welcome-title-sections
+  [[color/x-style
+    ["████████╗██╗ ██████╗"
+     "╚══██╔══╝██║██╔════╝"
+     "   ██║   ██║██║     "
+     "   ██║   ██║██║     "
+     "   ██║   ██║╚██████╗"
+     "   ╚═╝   ╚═╝ ╚═════╝"]
+   ]
+   [color/o-style
+    ["████████╗ █████╗  ██████╗"
+     "╚══██╔══╝██╔══██╗██╔════╝"
+     "   ██║   ███████║██║     "
+     "   ██║   ██╔══██║██║     "
+     "   ██║   ██║  ██║╚██████╗"
+     "   ╚═╝   ╚═╝  ╚═╝ ╚═════╝"]
+   ]
+   [color/warning-style
+    ["████████╗ ██████╗ ███████╗"
+     "╚══██╔══╝██╔═══██╗██╔════╝"
+     "   ██║   ██║   ██║█████╗  "
+     "   ██║   ██║   ██║██╔══╝  "
+     "   ██║   ╚██████╔╝███████╗"
+     "   ╚═╝    ╚═════╝ ╚══════╝"]]])
+
 (def row-separator (color/dim-style "---+---+---"))
 
 (def invalid-input-message (color/x-style "Invalid input. Enter a number 1-9."))
@@ -32,6 +57,8 @@
 (def invalid-play-again-message (color/x-style "Invalid input. Enter y or n."))
 
 (def goodbye-message (color/success-style "Thanks for playing!"))
+
+(def welcome-start-prompt (color/bold-style (color/success-style "Press Enter to begin.")))
 
 (def clear-screen-sequence "\u001B[2J\u001B[H")
 
@@ -222,6 +249,30 @@
   [{:keys [x o draws]}]
   (str "Score (X : O : Draws) " x " : " o " : " draws))
 
+(defn render-welcome-screen
+  []
+  (let [title-block (->> welcome-title-sections
+                         (mapcat (fn [[style lines]]
+                                   (concat (map #(color/bold-style (style %)) lines)
+                                           [""])))
+                         butlast
+                         (str/join "\n"))
+        instructions [(str (color/bold-style "Rules")
+                           ": "
+                           (color/x-style "X")
+                           " goes first, then "
+                           (color/o-style "O")
+                           ".")
+                      (str "Choose open cells with "
+                           (color/dim-style "1-9")
+                           " on the board.")
+                      "Match three in a row to win."]]
+    (str title-block
+         "\n\n"
+         (str/join "\n" instructions)
+         "\n\n"
+         welcome-start-prompt)))
+
 (defn render-final-screen
   [board scores]
   (let [{:keys [status winner]} (game-result board)
@@ -260,6 +311,13 @@
   [content]
   (print clear-screen-sequence)
   (println content))
+
+(defn- show-welcome-screen
+  []
+  (display-screen (render-welcome-screen))
+  (if (some? (read-line))
+    :start
+    :eof))
 
 (defn -main
   [& _args]
@@ -313,4 +371,6 @@
                           :no (println goodbye-message)
                           :eof (println no-input-message)))
                 :eof (println no-input-message))))]
-    (session-loop initial-scores)))
+    (case (show-welcome-screen)
+      :start (session-loop initial-scores)
+      :eof (println no-input-message))))
