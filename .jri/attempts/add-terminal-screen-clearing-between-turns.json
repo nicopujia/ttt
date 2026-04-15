@@ -1,0 +1,14 @@
+{
+  "attempts": [
+    {
+      "branch": "ralph",
+      "finished_at": 1776215013,
+      "log_path": "/home/nico/ttt/.jri/logs/ralph/add-terminal-screen-clearing-between-turns-2026-04-15T01-02-55Z.log",
+      "number": 7,
+      "result": "completed",
+      "started_at": 1776214975,
+      "task_slug": "add-terminal-screen-clearing-between-turns"
+    }
+  ],
+  "task_slug": "add-terminal-screen-clearing-between-turns"
+}
