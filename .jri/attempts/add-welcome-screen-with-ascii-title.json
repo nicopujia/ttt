@@ -1,0 +1,15 @@
+{
+  "attempts": [
+    {
+      "branch": "ralph",
+      "finished_at": 1776279613,
+      "log_path": "/home/nico/ttt/.jri/logs/ralph/add-welcome-screen-with-ascii-title-2026-04-15T18-52-32Z.log",
+      "number": 10,
+      "result": "completed",
+      "session_id": "ses_26d831682ffevJY3JnHtDfxYxf",
+      "started_at": 1776279152,
+      "task_slug": "add-welcome-screen-with-ascii-title"
+    }
+  ],
+  "task_slug": "add-welcome-screen-with-ascii-title"
+}
