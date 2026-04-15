@@ -1,5 +1,6 @@
 (ns ttt.core
   (:require [clojure.string :as str]
+            [ttt.color :as color]
             [ttt.game :as game]))
 
 (def board-size 9)
@@ -18,11 +19,11 @@
 
 (def title-line "Tic Tac Toe")
 
-(def row-separator "---+---+---")
+(def row-separator (color/dim-style "---+---+---"))
 
-(def invalid-input-message "Invalid input. Enter a number 1-9.")
+(def invalid-input-message (color/x-style "Invalid input. Enter a number 1-9."))
 
-(def occupied-cell-message "Cell already occupied. Choose another position.")
+(def occupied-cell-message (color/x-style "Cell already occupied. Choose another position."))
 
 (def no-input-message "No input received. Exiting.")
 
@@ -99,33 +100,61 @@
     (throw (ex-info "Invalid player" {:player player}))))
 
 (defn- cell-display
-  [board position]
-  (case (nth board (position->index position))
-    :x " X "
-    :o " O "
-    (format " %d " position)))
+  [board position winning-positions]
+  (let [cell-value (nth board (position->index position))
+        is-winning-cell? (contains? winning-positions position)]
+    (case cell-value
+      :x (let [styled (color/x-style " X ")]
+           (if is-winning-cell?
+             (color/win-highlight styled)
+             styled))
+      :o (let [styled (color/o-style " O ")]
+           (if is-winning-cell?
+             (color/win-highlight styled)
+             styled))
+      (if is-winning-cell?
+        (color/win-highlight (format " %d " position))
+        (color/dim-style (format " %d " position))))))
+
+(defn- winning-positions
+  [board]
+  (when (game/board? board)
+    (some (fn [[a b c]]
+            (let [line [(nth board a) (nth board b) (nth board c)]
+                  player (first line)]
+              (when (and player
+                         (= line [player player player]))
+                #{(inc a) (inc b) (inc c)})))
+          winning-lines)))
 
 (defn- render-row
-  [board positions]
-  (str/join "|" (map #(cell-display board %) positions)))
+  [board positions winning-cells]
+  (str/join (color/dim-style "|") (map #(cell-display board % winning-cells) positions)))
 
 (defn render-board
-  [board player]
-  (when-not (game/board? board)
-    (throw (ex-info "Invalid board" {:board board})))
-  (str title-line
-       "\n\n"
-       (player->label player)
-       "'s turn\n\n"
-       (render-row board [1 2 3])
-       "\n"
-       row-separator
-       "\n"
-       (render-row board [4 5 6])
-       "\n"
-       row-separator
-       "\n"
-       (render-row board [7 8 9])))
+  ([board player]
+   (render-board board player nil))
+  ([board player winner]
+   (when-not (game/board? board)
+     (throw (ex-info "Invalid board" {:board board})))
+   (let [winning-cells (when winner
+                         (winning-positions board))
+         turn-message (if winner
+                        (str (color/bold-style (color/success-style (str (player->label winner) " wins!"))))
+                        (str (player->label player) "'s turn"))]
+     (str (color/bold-style title-line)
+          "\n\n"
+          turn-message
+          "\n\n"
+          (render-row board [1 2 3] winning-cells)
+          "\n"
+          row-separator
+          "\n"
+          (render-row board [4 5 6] winning-cells)
+          "\n"
+          row-separator
+          "\n"
+          (render-row board [7 8 9] winning-cells)))))
 
 (defn parse-position
   [input]
@@ -156,8 +185,8 @@
   [board]
   (let [{:keys [status winner]} (game-result board)]
     (case status
-      :won (str (player->label winner) " wins! Game over.")
-      :draw "It's a draw! Game over."
+      :won (color/success-style (str (player->label winner) " wins! Game over."))
+      :draw (color/warning-style "It's a draw! Game over.")
       (throw (ex-info "Game is not over" {:board board :status status})))))
 
 (defn- prompt-input
@@ -195,7 +224,7 @@
               (case status
                 :playing (recur board next-player)
                 :won (do
-                       (println (render-board board winner))
+                       (println (render-board board current-player winner))
                        (println (final-message board)))
                 :draw (do
                         (println (render-board board current-player))
