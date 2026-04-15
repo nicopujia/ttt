@@ -1,0 +1,15 @@
+{
+  "attempts": [
+    {
+      "branch": "ralph",
+      "finished_at": 1776270001,
+      "log_path": "/home/nico/ttt/.jri/logs/ralph/add-play-again-loop-with-score-tracking-2026-04-15T16-10-12Z.log",
+      "number": 9,
+      "result": "completed",
+      "session_id": "ses_26e17b7cdffe7KlWSe6sQcLZ11",
+      "started_at": 1776269412,
+      "task_slug": "add-play-again-loop-with-score-tracking"
+    }
+  ],
+  "task_slug": "add-play-again-loop-with-score-tracking"
+}
