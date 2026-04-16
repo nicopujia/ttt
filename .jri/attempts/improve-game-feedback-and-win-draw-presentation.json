@@ -1,0 +1,14 @@
+{
+  "attempts": [
+    {
+      "branch": "ralph",
+      "finished_at": 1776299212,
+      "log_path": "/home/nico/ttt/.jri/logs/ralph/improve-game-feedback-and-win-draw-presentation-2026-04-16T00-01-37Z.log",
+      "number": 11,
+      "result": "interrupted",
+      "started_at": 1776297697,
+      "task_slug": "improve-game-feedback-and-win-draw-presentation"
+    }
+  ],
+  "task_slug": "improve-game-feedback-and-win-draw-presentation"
+}
