@@ -1,0 +1,23 @@
+{
+  "attempts": [
+    {
+      "branch": "ralph/main",
+      "finished_at": 1777840904,
+      "log_path": "/home/nico/ttt/.jri/logs/ralph/2026-05-03T20-26-37Z-add-automated-coverage-for-terminal-tic-tac-toe-behavior.log",
+      "number": 3,
+      "result": "completed",
+      "result_payload": {
+        "learnings": [
+          "Semantic screen helpers that inspect sections, token counts, and ANSI-stripped content make CLI tests durable while still proving redraw requirements.",
+          "For graceful CLI exit behavior, supplement in-process `run-game!` capture tests with subprocess assertions so exit code 0 is actually covered."
+        ],
+        "result": "completed",
+        "summary": "Expanded `test/ttt/core_test.clj` into durable behavioral coverage for terminal tic-tac-toe, including startup flow, numbered boards, alternating turns, strict/trimmed move parsing, occupied/out-of-range/non-numeric and blank/whitespace retries, row/column/diagonal wins, draws, scoreboard order/count persistence, play-again handling, required clear/redraw transitions, ANSI-colored marks, and the specified EOF/partial-EOF cases. Added subprocess-based assertions that graceful EOF paths exit with status 0, manually QA\u2019d representative `make run` scenarios, ran `make check`, and passed the Ralph validator."
+      },
+      "session_id": "019def85-8841-731b-823d-fc8e1ef3e9ef",
+      "started_at": 1777839997,
+      "task_slug": "add-automated-coverage-for-terminal-tic-tac-toe-behavior"
+    }
+  ],
+  "task_slug": "add-automated-coverage-for-terminal-tic-tac-toe-behavior"
+}
