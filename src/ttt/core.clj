@@ -188,12 +188,15 @@
                               (when (draw? next-board) :draw))]
               (if outcome
                 (let [scoreboard' (update-scoreboard scoreboard outcome)]
-                  (render-screen! out [(board-string next-board)
-                                       (outcome-string outcome)
-                                       (scoreboard-string scoreboard')])
                   (if (= kind :eof-partial)
-                    {:status :exit :message "EOF received. Exiting." :scoreboard scoreboard'}
-                    (handle-play-again! reader out next-board outcome scoreboard')))
+                    (do
+                      (render-screen! out [(board-string next-board)
+                                           (outcome-string outcome)
+                                           (scoreboard-string scoreboard')])
+                      {:status :exit :message "EOF received. Exiting." :scoreboard scoreboard'})
+                    (do
+                      (render-screen! out (final-screen-sections next-board outcome scoreboard' nil))
+                      (handle-play-again! reader out next-board outcome scoreboard'))))
                 (let [next-player (other-player player)]
                   (render-screen! out (move-screen-sections next-board next-player nil))
                   (recur next-board next-player))))))))))

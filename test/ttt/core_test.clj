@@ -32,6 +32,7 @@
     (is (str/includes? output (str core/o-color "O" core/color-reset)))
     (is (str/includes? output "Round result: X wins."))
     (is (re-find #"X wins: 1\s+O wins: 0\s+Draws: 0" output))
+    (is (str/includes? output "Play again? (y/yes/n/no): "))
     (is (str/includes? output "Thanks for playing."))))
 
 (deftest occupied-cell-retry-keeps-same-player-and-board
