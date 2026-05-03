@@ -1,5 +1,6 @@
 (ns ttt.core-test
-  (:require [clojure.string :as str]
+  (:require [clojure.java.shell :as shell]
+            [clojure.string :as str]
             [clojure.test :refer [are deftest is testing]]
             [ttt.core :as core]))
 
@@ -10,6 +11,9 @@
         writer (java.io.StringWriter.)]
     (core/run-game! reader writer)
     (str writer)))
+
+(defn run-cli-process [input]
+  (shell/sh "clojure" "-M:run" :in input))
 
 (defn screen-chunks [output]
   (str/split output (re-pattern (java.util.regex.Pattern/quote core/clear-screen))))
@@ -65,6 +69,10 @@
     (and (= expected-sections (count sections))
          (every? (complement str/blank?) sections))))
 
+(defn validation-section [screen]
+  (let [sections (screen-sections screen)]
+    (nth sections (- (count sections) 2))))
+
 (deftest pure-game-rules-are-covered
   (testing "only exact 1 through 9 are syntactically valid after trimming elsewhere"
     (are [text expected] (= expected (core/valid-move-text? text))
@@ -112,8 +120,10 @@
       (is (= 9 (clear-screen-count output)))
       (is (every? #(move-prompt-for? % :x) (map screens [1 2 3 4 5])))
       (is (every? #(invalid-retry-screen? % 3) (map screens [1 2 3 4 5])))
+      (is (every? #(not (str/blank? (validation-section %))) (map screens [1 2 3 4 5])))
       (is (move-prompt-for? (nth screens 6) :o))
       (is (invalid-retry-screen? (nth screens 7) 3))
+      (is (not (str/blank? (validation-section (nth screens 7)))))
       (is (move-prompt-for? (nth screens 7) :o))
       (is (re-find ansi-mark-pattern (nth screens 7)))
       (is (str/includes? output "EOF received. Exiting."))))
@@ -160,7 +170,8 @@
         (is (win-outcome-screen? screen :x))
         (is (scoreboard-screen? screen 1 0 0))
         (is (play-again-prompt? screen))
-        (is (invalid-retry-screen? screen 5))))))
+        (is (invalid-retry-screen? screen 5))
+        (is (not (str/blank? (validation-section screen))))))))
 
 (deftest clear-plus-redraw-transitions-are-emitted-under-captured-output
   (testing "required transitions emit clear codes and redraw the expected semantic content"
@@ -170,6 +181,7 @@
       (is (move-prompt-for? (first screens) :x))
       (is (move-prompt-for? (second screens) :o))
       (is (invalid-retry-screen? (nth screens 3) 3))
+      (is (not (str/blank? (validation-section (nth screens 3)))))
       (is (move-prompt-for? (nth screens 3) :x))
       (is (has-board? (nth screens 6)))
       (is (>= (ansi-mark-count (nth screens 6)) 5))
@@ -186,6 +198,11 @@
     (doseq [input ["" "   " "1\n4\n2\n5\n3\n"]]
       (let [output (run-game-output input)]
         (is (str/includes? output "EOF received. Exiting.")))))
+  (testing "graceful EOF paths return status 0 from the CLI"
+    (doseq [input ["" "   " "1" "1\n4\n2\n5\n3\n"]]
+      (let [{:keys [exit out err]} (run-cli-process input)]
+        (is (= 0 exit))
+        (is (str/includes? (str out err) "EOF received. Exiting.")))))
   (testing "valid partial EOF move that does not end the round refreshes once, then exits without play-again"
     (let [output (run-game-output "1")
           screens (rendered-screens output)]
@@ -217,6 +234,7 @@
           screens (rendered-screens output)]
       (is (= 2 (clear-screen-count output)))
       (is (invalid-retry-screen? (second screens) 3))
+      (is (not (str/blank? (validation-section (second screens)))))
       (is (move-prompt-for? (second screens) :x))
       (is (str/includes? output "EOF received. Exiting."))))
   (testing "valid partial EOF play-again y and yes start a new round, then the immediate EOF exits"
@@ -239,4 +257,5 @@
       (is (= 7 (clear-screen-count output)))
       (is (play-again-prompt? (last screens)))
       (is (invalid-retry-screen? (last screens) 5))
+      (is (not (str/blank? (validation-section (last screens)))))
       (is (str/includes? output "EOF received. Exiting.")))))
