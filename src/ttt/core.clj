@@ -178,24 +178,25 @@
           (recur board player))
 
         :else
-        (let [{:keys [status board message]} (handle-move-input board player trimmed)]
+        (let [{status :status next-board :board message :message}
+              (handle-move-input board player trimmed)]
           (if (= status :invalid)
             (do
               (render-screen! out (move-screen-sections board player message))
               (recur board player))
-            (let [outcome (or (winner board)
-                              (when (draw? board) :draw))]
+            (let [outcome (or (winner next-board)
+                              (when (draw? next-board) :draw))]
               (if outcome
                 (let [scoreboard' (update-scoreboard scoreboard outcome)]
-                  (render-screen! out [(board-string board)
+                  (render-screen! out [(board-string next-board)
                                        (outcome-string outcome)
                                        (scoreboard-string scoreboard')])
                   (if (= kind :eof-partial)
                     {:status :exit :message "EOF received. Exiting." :scoreboard scoreboard'}
-                    (handle-play-again! reader out board outcome scoreboard')))
+                    (handle-play-again! reader out next-board outcome scoreboard')))
                 (let [next-player (other-player player)]
-                  (render-screen! out (move-screen-sections board next-player nil))
-                  (recur board next-player))))))))))
+                  (render-screen! out (move-screen-sections next-board next-player nil))
+                  (recur next-board next-player))))))))))
 
 (defn run-game! [reader out]
   (emit-line! out (welcome-string))

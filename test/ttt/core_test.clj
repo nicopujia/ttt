@@ -34,6 +34,13 @@
     (is (re-find #"X wins: 1\s+O wins: 0\s+Draws: 0" output))
     (is (str/includes? output "Thanks for playing."))))
 
+(deftest occupied-cell-retry-keeps-same-player-and-board
+  (let [output (run-game-output "1\n1\n2")]
+    (is (str/includes? output "That cell is already occupied."))
+    (is (re-find #"\x1b\[2J\x1b\[H .*X.*\n---\+---\+---\n 4 \| 5 \| 6" output))
+    (is (>= (count (re-seq #"Player O, choose a cell \(1-9\):" output)) 2))
+    (is (str/includes? output "EOF received. Exiting."))))
+
 (deftest partial-eof-move-exits-gracefully-after-refresh
   (let [output (run-game-output "1")]
     (is (str/includes? output "Player O, choose a cell (1-9): "))
