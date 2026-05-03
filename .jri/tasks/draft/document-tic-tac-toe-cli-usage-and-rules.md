@@ -13,7 +13,7 @@ acceptance_criteria:
   in reading order, X starts, alternating turns, wins, and draws.
 - The README documents accepted play-again inputs y/yes/n/no, case-insensitively with
   surrounding whitespace ignored.
-- The README states that the scoreboard is in-memory for the current session.
+- The README states that the scoreboard is in-memory for the current session and displays X wins, O wins, and Draws.
 - The README does not promise unsupported features such as AI, persistence, networking,
   or configurable themes.
 ---
@@ -28,4 +28,4 @@ Required content:
 - How to run the full quality gate with `make check`.
 - How to play: cells 1-9 in reading order, X starts, players alternate, standard win/draw rules.
 - Play-again accepted answers: `y`, `yes`, `n`, `no`, case-insensitively, with surrounding whitespace ignored.
-- Mention that the scoreboard is in-memory for the current program session.
+- Mention that the scoreboard is in-memory for the current program session and displays `X wins`, `O wins`, and `Draws`.

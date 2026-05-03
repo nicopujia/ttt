@@ -6,8 +6,8 @@ depends_on:
 - implement-complete-terminal-tic-tac-toe-gameplay
 acceptance_criteria:
 - Automated Clojure tests cover normal gameplay, wins, draws, invalid moves, play-again
-  behavior, scoreboard persistence, ANSI clearing, ANSI-colored marks, input trimming,
-  and EOF edge cases described in the task body.
+  behavior, exact scoreboard fields/count updates/persistence, ANSI clearing, ANSI-colored
+  marks, input trimming, and EOF edge cases described in the task body.
 - Tests prove X and O marks themselves include ANSI color escape sequences without
   requiring a specific color choice.
 - Tests prove clear/refresh ANSI clear codes are emitted even when output is captured
@@ -30,14 +30,14 @@ Required test coverage:
 - Representative row, column, and diagonal wins are detected.
 - Draw is detected when the board fills without a winner.
 - Final win/draw presentation includes final board, outcome summary, and scoreboard.
+- Scoreboard displays exactly `X wins`, `O wins`, and `Draws`; counts start at 0, update after completed rounds, and persist across multiple rounds in one process.
 - Play-again accepts y/yes/n/no case-insensitively with surrounding whitespace ignored.
-- Scoreboard persists across multiple rounds in one process.
 - Invalid play-again retry refresh includes final board, outcome summary, scoreboard, validation message, and play-again prompt.
 - ANSI clear codes are emitted even under redirected/non-interactive output.
 - X and O marks themselves are ANSI-colorized.
 - Move input trims surrounding whitespace.
 - EOF during move or play-again exits gracefully with status 0 and a short message when there is no meaningful input.
-- Non-whitespace partial input at EOF is submitted, including the specified invalid-partial-input-then-immediate-EOF retry behavior.
+- Non-whitespace partial input at EOF is submitted, including valid partial move input that wins/draws or advances to the next turn before graceful exit, valid partial play-again `y`/`yes` and `n`/`no` behavior, and the specified invalid-partial-input-then-immediate-EOF retry behavior.
 - Whitespace-only partial EOF exits gracefully as no meaningful input.
 
 Testing approach:
