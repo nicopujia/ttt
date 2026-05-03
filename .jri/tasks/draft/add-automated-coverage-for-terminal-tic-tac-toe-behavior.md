@@ -6,9 +6,9 @@ depends_on:
 - implement-complete-terminal-tic-tac-toe-gameplay
 acceptance_criteria:
 - Automated Clojure tests cover normal gameplay, wins, draws, invalid moves including
-  numeric-looking variants, play-again behavior, exact scoreboard fields/order/count
-  updates/persistence, required clear-plus-redraw transitions, ANSI-colored marks,
-  input trimming, and EOF edge cases described in the task body.
+  blank/whitespace lines and numeric-looking variants, play-again behavior, exact
+  scoreboard fields/order/count updates/persistence, required clear-plus-redraw transitions,
+  ANSI-colored marks, input trimming, and EOF edge cases described in the task body.
 - Tests prove X and O marks themselves include ANSI color escape sequences without
   requiring a specific color choice.
 - Tests prove clear/refresh ANSI clear codes plus required redrawn screen content
@@ -29,6 +29,7 @@ Required test coverage:
 - X and O alternate on valid moves; X starts each round.
 - Move input trims surrounding whitespace.
 - After trimming, only exact strings `1` through `9` are syntactically valid move inputs; numeric-looking variants such as `01`, `+1`, and `1.0` are rejected.
+- Newline-terminated blank or whitespace-only input is invalid and causes the normal retry refresh at both move prompts and play-again prompts.
 - Invalid move input keeps the same player and refreshes with current board, validation message, and same-player prompt.
 - Occupied cells and out-of-range/non-numeric inputs are rejected.
 - Representative row, column, and diagonal wins are detected.

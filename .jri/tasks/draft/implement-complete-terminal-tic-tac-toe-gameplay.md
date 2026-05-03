@@ -15,6 +15,9 @@ acceptance_criteria:
   moves keep the same player to move.
 - After trimming, only exact strings `1` through `9` are syntactically valid move
   inputs; numeric-looking variants such as `01`, `+1`, and `1.0` are invalid.
+- Newline-terminated blank or whitespace-only input is invalid and causes the normal
+  retry refresh at both move prompts and play-again prompts; only EOF with no meaningful
+  input exits gracefully.
 - The game detects all standard row, column, and diagonal wins for X and O.
 - The game detects a draw when all nine cells are filled without a winner.
 - After a win or draw, the game displays the final board, a clear win/draw summary,
@@ -75,6 +78,8 @@ Input and EOF behavior:
 - For move input, trim surrounding whitespace before validation.
 - After trimming, only exact strings `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, and `9` are syntactically valid move inputs. Numeric-looking variants such as `01`, `+1`, and `1.0` are invalid.
 - A syntactically valid move is playable only if the corresponding cell is unoccupied.
+- Newline-terminated blank or whitespace-only input at a move prompt is invalid move input and must use the normal invalid move retry refresh; it does not exit.
+- Newline-terminated blank or whitespace-only input at a play-again prompt is invalid play-again input and must use the normal invalid play-again retry refresh; it does not exit.
 - Non-whitespace partial input at EOF is submitted as if the line had been entered.
 - Whitespace-only partial input followed by EOF exits gracefully as no meaningful input, status 0, with a short message.
 - EOF during move input with no meaningful input exits gracefully with status 0 and a short message.
@@ -84,6 +89,7 @@ Input and EOF behavior:
 - If valid non-whitespace partial EOF play-again input is `y` or `yes`, start the next round, show the first board and move prompt, then the immediate EOF exits gracefully with status 0 and a short message.
 - If valid non-whitespace partial EOF play-again input is `n` or `no`, exit gracefully with status 0 using the normal goodbye/exit message.
 - If invalid non-whitespace partial EOF play-again input is submitted, show the invalid play-again refreshed retry screen, then exit gracefully with status 0 on the immediate EOF retry.
+- Only EOF with no meaningful input exits gracefully without being treated as invalid input.
 
 Implementation choices:
 - Sensible implementation choices are approved where not otherwise specified.
