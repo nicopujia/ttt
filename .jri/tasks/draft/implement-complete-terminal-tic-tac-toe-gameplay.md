@@ -12,13 +12,15 @@ acceptance_criteria:
   placed X/O marks instead of those cell numbers.
 - X starts every new round, players alternate turns after valid moves only, and invalid
   moves keep the same player to move.
+- After trimming, only exact strings `1` through `9` are syntactically valid move
+  inputs; numeric-looking variants such as `01`, `+1`, and `1.0` are invalid.
 - The game detects all standard row, column, and diagonal wins for X and O.
 - The game detects a draw when all nine cells are filled without a winner.
 - After a win or draw, the game displays the final board, a clear win/draw summary,
   and the in-memory session scoreboard.
-- The scoreboard displays exactly `X wins`, `O wins`, and `Draws`; each count starts
-  at 0, updates after completed rounds, persists across play-again rounds in the same
-  process, and resets only when the program starts again.
+- The scoreboard displays exactly `X wins`, `O wins`, and `Draws` in that order; each
+  count starts at 0, updates after completed rounds, persists across play-again rounds
+  in the same process, and resets only when the program starts again.
 - The play-again loop accepts y/yes/n/no case-insensitively with surrounding whitespace
   ignored.
 - Invalid move retry refreshes show the current board, a validation message, and the
@@ -46,7 +48,7 @@ Implement the human-vs-human terminal tic-tac-toe game using the project entrypo
 Game scope:
 - Human-vs-human only; no AI, network play, saved games, or persistence.
 - Use a single in-memory session scoreboard across rounds within one process.
-- The scoreboard displays exactly these fields: `X wins`, `O wins`, and `Draws`. Counts start at 0, update after each completed round, and persist until the process exits. Losses, percentages, round history, player names, and total games are not required.
+- The scoreboard displays exactly these fields in this order: `X wins`, `O wins`, `Draws`. Counts start at 0, update after each completed round, and persist until the process exits. Labels and order must be detectable; one-line or multi-line layout and punctuation/art are flexible. Losses, percentages, round history, player names, and total games are not required.
 - Standard 3x3 tic-tac-toe rules: X and O alternate turns; X starts each round; first player with three marks in a row, column, or diagonal wins; if all nine cells are filled without a winner, the round is a draw.
 - Cells are numbered 1-9 in reading order, left-to-right and top-to-bottom.
 
@@ -65,7 +67,8 @@ Terminal/UI behavior:
 
 Input and EOF behavior:
 - For move input, trim surrounding whitespace before validation.
-- Valid moves are unoccupied cells 1 through 9 only.
+- After trimming, only exact strings `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, and `9` are syntactically valid move inputs. Numeric-looking variants such as `01`, `+1`, and `1.0` are invalid.
+- A syntactically valid move is playable only if the corresponding cell is unoccupied.
 - Non-whitespace partial input at EOF is submitted as if the line had been entered.
 - Whitespace-only partial input followed by EOF exits gracefully as no meaningful input, status 0, with a short message.
 - EOF during move input with no meaningful input exits gracefully with status 0 and a short message.
