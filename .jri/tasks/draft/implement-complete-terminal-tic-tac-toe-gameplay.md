@@ -39,11 +39,15 @@ acceptance_criteria:
 - EOF handling during move and play-again input exits gracefully with status 0 and
   a short message when there is no meaningful input.
 - Non-whitespace partial input at EOF is submitted; valid partial move input is processed
-  normally including win/draw or next-turn behavior before graceful exit on the next
-  EOF point, valid partial play-again `y`/`yes` starts the next round then exits gracefully
-  on immediate EOF, valid partial play-again `n`/`no` exits with the normal goodbye,
-  and invalid partial input shows the normal refreshed retry screen before the next
-  immediate EOF causes graceful status-0 exit.
+  normally. If a valid partial EOF move wins or draws, the game shows the final board,
+  outcome, and updated scoreboard, then exits gracefully with status 0 and a short
+  EOF/exit message without showing a play-again prompt. If a valid partial EOF move
+  does not end the round, the game refreshes to the next turn, then exits gracefully
+  with status 0 and a short message on the immediate next EOF. Valid partial play-again
+  `y`/`yes` starts the next round then exits gracefully on immediate EOF; valid partial
+  play-again `n`/`no` exits with the normal goodbye; invalid partial input shows the
+  normal refreshed retry screen before the next immediate EOF causes graceful status-0
+  exit.
 - Whitespace-only partial input at EOF is treated as no meaningful input and exits
   gracefully with status 0.
 - The implementation remains human-vs-human only with no AI, persistence, networking,

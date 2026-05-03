@@ -14,6 +14,10 @@ acceptance_criteria:
 - Tests prove clear/refresh ANSI clear codes plus required redrawn screen content
   are emitted for each required refresh transition even when output is captured or
   redirected.
+- Tests cover partial EOF winning/drawing move behavior as immediate graceful exit
+  after final board/outcome/updated scoreboard without a play-again prompt, and partial
+  EOF non-ending move behavior as next-turn refresh followed by graceful exit on immediate
+  EOF.
 - Tests avoid brittle assertions on exact prose, exact board art, or exact color choices
   except where checking required behavior.
 - '`make check` runs the full automated test suite along with clj-kondo and cljfmt
@@ -41,7 +45,7 @@ Required test coverage:
 - ANSI clear codes plus redrawn required screen content are emitted for the initial welcome-to-first-board transition, valid non-ending moves, invalid move retries, winning/drawing moves, invalid play-again retries, and play-again yes new-round transitions, even under redirected/non-interactive output.
 - X and O marks themselves are ANSI-colorized.
 - EOF during move or play-again exits gracefully with status 0 and a short message when there is no meaningful input.
-- Non-whitespace partial input at EOF is submitted, including valid partial move input that wins/draws or advances to the next turn before graceful exit, valid partial play-again `y`/`yes` and `n`/`no` behavior, and the specified invalid-partial-input-then-immediate-EOF retry behavior.
+- Non-whitespace partial input at EOF is submitted, including valid partial move input. Tests must distinguish both valid partial EOF move cases: when the move wins/draws, the game shows final board/outcome/updated scoreboard and exits without a play-again prompt; when the move does not end the round, the game refreshes to the next turn and then exits on the immediate next EOF. Also cover valid partial play-again `y`/`yes` and `n`/`no` behavior, plus the specified invalid-partial-input-then-immediate-EOF retry behavior.
 - Whitespace-only partial EOF exits gracefully as no meaningful input.
 
 Testing approach:
