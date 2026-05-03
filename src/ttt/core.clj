@@ -46,17 +46,21 @@
 
 (def row-separator (color/dim-style "---+---+---"))
 
-(def invalid-input-message (color/x-style "Invalid input. Enter a number 1-9."))
+(def no-cell-selected-message (color/x-style "Please enter a number from 1 to 9."))
 
-(def occupied-cell-message (color/x-style "Cell already occupied. Choose another position."))
+(def out-of-range-message (color/x-style "That move isn't on the board. Choose a number from 1 to 9."))
 
-(def no-input-message "No input received. Exiting.")
+(def invalid-input-message (color/x-style "Please enter a valid number from 1 to 9."))
 
-(def play-again-prompt (color/warning-style "Play again? (y/n) "))
+(def occupied-cell-message (color/x-style "That cell is already taken. Choose one of the open numbers."))
 
-(def invalid-play-again-message (color/x-style "Invalid input. Enter y or n."))
+(def no-input-message "No input received. Exiting the game.")
 
-(def goodbye-message (color/success-style "Thanks for playing!"))
+(def play-again-prompt (color/warning-style "Play another round? (y/n) "))
+
+(def invalid-play-again-message (color/x-style "Please answer with y or n."))
+
+(def goodbye-message (color/success-style "Thanks for playing Tic Tac Toe!"))
 
 (def welcome-start-prompt (color/bold-style (color/success-style "Press Enter to begin.")))
 
@@ -129,6 +133,10 @@
     :o "O"
     (throw (ex-info "Invalid player" {:player player}))))
 
+(defn- player-name
+  [player]
+  (str "Player " (player->label player)))
+
 (defn next-player
   [player]
   (case player
@@ -184,6 +192,17 @@
        "\n"
        (render-row board [7 8 9] winning-cells)))
 
+(defn- boxed-message
+  [message style]
+  (let [content (str "  " message "  ")
+        width (count content)
+        border (apply str (repeat width "═"))]
+    (str (style (str "╔" border "╗"))
+         "\n"
+         (style (str "║" content "║"))
+         "\n"
+         (style (str "╚" border "╝")))))
+
 (defn render-board
   ([board player]
    (render-board board player nil))
@@ -193,8 +212,12 @@
    (let [winning-cells (when winner
                           (winning-positions board))
          header (if winner
-                  (str (color/bold-style (color/success-style (str (player->label winner) " wins!"))))
-                  (str (player->label player) "'s turn"))]
+                  (str (color/bold-style (color/success-style (str (player-name winner) " wins!")))
+                       "\n"
+                       (color/success-style "Three in a row seals the round."))
+                  (str (color/bold-style (str (player-name player) " to move"))
+                       "\n"
+                       "Choose an open cell (1-9)."))]
      (render-board-display board header winning-cells))))
 
 (defn parse-position
@@ -206,11 +229,26 @@
 
 (defn validate-input
   [board input]
-  (if-some [position (parse-position input)]
-    (if (valid-move? board position)
-      {:position position}
-      {:error occupied-cell-message})
-    {:error invalid-input-message}))
+  (let [trimmed-input (some-> input str/trim)]
+    (cond
+      (or (nil? trimmed-input)
+          (str/blank? trimmed-input))
+      {:error no-cell-selected-message}
+
+      (re-matches #"\d+" trimmed-input)
+      (let [position (Integer/parseInt trimmed-input)]
+        (cond
+          (not (valid-position? position))
+          {:error out-of-range-message}
+
+          (valid-move? board position)
+          {:position position}
+
+          :else
+          {:error occupied-cell-message}))
+
+      :else
+      {:error invalid-input-message})))
 
 (defn game-result
   [board]
@@ -226,8 +264,8 @@
   [board]
   (let [{:keys [status winner]} (game-result board)]
     (case status
-      :won (color/success-style (str (player->label winner) " wins! Game over."))
-      :draw (color/warning-style "It's a draw! Game over.")
+      :won (color/success-style (str (player-name winner) " wins the round!"))
+      :draw (color/warning-style "The round ends in a draw.")
       (throw (ex-info "Game is not over" {:board board :status status})))))
 
 (defn parse-play-again-choice
@@ -247,7 +285,7 @@
 
 (defn render-score
   [{:keys [x o draws]}]
-  (str "Score (X : O : Draws) " x " : " o " : " draws))
+  (str "Scoreboard: X " x " | O " o " | Draws " draws))
 
 (defn render-welcome-screen
   []
@@ -278,11 +316,11 @@
   (let [{:keys [status winner]} (game-result board)
         winning-cells (when winner
                         (winning-positions board))
-        header (case status
-                 :won (str (color/bold-style (color/success-style (str (player->label winner) " wins!"))))
-                 :draw (str (color/bold-style (color/warning-style "It's a draw!")))
-                 (throw (ex-info "Game is not over" {:board board :status status}))) ]
-    (str (render-board-display board header winning-cells)
+        banner (case status
+                 :won (boxed-message (str (player-name winner) " wins!") color/success-style)
+                 :draw (boxed-message "Round ends in a draw" color/warning-style)
+                 (throw (ex-info "Game is not over" {:board board :status status})))]
+    (str (render-board-display board banner winning-cells)
          "\n\n"
          (final-message board)
          "\n"
@@ -290,7 +328,7 @@
 
 (defn- prompt-input
   [player]
-  (print (str (player->label player) "'s turn. Enter 1-9: "))
+  (print (str (player-name player) " - choose an open cell (1-9): "))
   (flush)
   (read-line))
 
