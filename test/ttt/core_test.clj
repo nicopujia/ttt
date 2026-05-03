@@ -25,6 +25,12 @@
                    "O wins: " o-wins "\\s+"
                    "Draws: " draws)))
 
+(defn ansi-mark-count [screen]
+  (count (re-seq ansi-mark-pattern screen)))
+
+(defn has-board? [screen]
+  (str/includes? screen "---+---+---"))
+
 (deftest pure-game-rules-are-covered
   (testing "only exact 1 through 9 are syntactically valid after trimming elsewhere"
     (are [text expected] (= expected (core/valid-move-text? text))
@@ -98,7 +104,11 @@
         (is (str/includes? output outcome-text))
         (is (re-find (scoreboard-pattern 1 0 0) output)))))
   (testing "draws update the scoreboard and final presentation"
-    (let [output (run-game-output "1\n2\n3\n5\n4\n6\n8\n7\n9\nn\n")]
+    (let [output (run-game-output "1\n2\n3\n5\n4\n6\n8\n7\n9\nn\n")
+          final-screen (last (rendered-screens output))]
+      (is (= 10 (clear-screen-count output)))
+      (is (has-board? final-screen))
+      (is (= 9 (ansi-mark-count final-screen)))
       (is (str/includes? output "Round result: Draw."))
       (is (re-find (scoreboard-pattern 0 0 1) output))
       (is (str/includes? output "Play again? (y/yes/n/no): "))))
@@ -114,10 +124,14 @@
           screens (rendered-screens output)
           invalid-blank-screen (nth screens 6)
           invalid-text-screen (nth screens 7)]
+      (is (has-board? invalid-blank-screen))
+      (is (>= (ansi-mark-count invalid-blank-screen) 5))
       (is (str/includes? invalid-blank-screen "Round result: X wins."))
       (is (re-find (scoreboard-pattern 1 0 0) invalid-blank-screen))
       (is (str/includes? invalid-blank-screen "Please answer y/yes/n/no."))
       (is (str/includes? invalid-blank-screen "Play again? (y/yes/n/no): "))
+      (is (has-board? invalid-text-screen))
+      (is (>= (ansi-mark-count invalid-text-screen) 5))
       (is (str/includes? invalid-text-screen "Round result: X wins."))
       (is (re-find (scoreboard-pattern 1 0 0) invalid-text-screen))
       (is (str/includes? invalid-text-screen "Please answer y/yes/n/no."))
@@ -132,6 +146,8 @@
       (is (str/includes? (second screens) "Player O, choose a cell (1-9): "))
       (is (str/includes? (nth screens 3) "That cell is already occupied."))
       (is (str/includes? (nth screens 3) "Player X, choose a cell (1-9): "))
+      (is (has-board? (nth screens 6)))
+      (is (>= (ansi-mark-count (nth screens 6)) 5))
       (is (str/includes? (nth screens 6) "Round result: X wins."))
       (is (re-find (scoreboard-pattern 1 0 0) (nth screens 6)))
       (is (str/includes? (nth screens 7) "Please answer y/yes/n/no."))
@@ -153,14 +169,20 @@
       (is (not (str/includes? output "Play again? (y/yes/n/no): ")))
       (is (str/includes? output "EOF received. Exiting."))))
   (testing "valid partial EOF move that wins exits after final board, outcome, and updated scoreboard"
-    (let [output (run-game-output "1\n4\n2\n5\n3")]
+    (let [output (run-game-output "1\n4\n2\n5\n3")
+          final-screen (last (rendered-screens output))]
       (is (= 6 (clear-screen-count output)))
+      (is (has-board? final-screen))
+      (is (>= (ansi-mark-count final-screen) 5))
       (is (str/includes? output "Round result: X wins."))
       (is (re-find (scoreboard-pattern 1 0 0) output))
       (is (not (str/includes? output "Play again? (y/yes/n/no): ")))
       (is (str/includes? output "EOF received. Exiting."))))
   (testing "valid partial EOF move that draws exits after final board, outcome, and updated scoreboard"
-    (let [output (run-game-output "1\n2\n3\n5\n4\n6\n8\n7\n9")]
+    (let [output (run-game-output "1\n2\n3\n5\n4\n6\n8\n7\n9")
+          final-screen (last (rendered-screens output))]
+      (is (has-board? final-screen))
+      (is (= 9 (ansi-mark-count final-screen)))
       (is (str/includes? output "Round result: Draw."))
       (is (re-find (scoreboard-pattern 0 0 1) output))
       (is (not (str/includes? output "Play again? (y/yes/n/no): ")))
