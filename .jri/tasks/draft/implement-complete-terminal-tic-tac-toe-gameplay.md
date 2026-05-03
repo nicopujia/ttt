@@ -5,7 +5,8 @@ assignee: Ralph
 depends_on:
 - establish-clojure-cli-project-quality-entrypoint
 acceptance_criteria:
-- '`make run` starts a playable terminal tic-tac-toe game.'
+- '`make run` starts a playable terminal tic-tac-toe game rather than the setup-stage
+  placeholder.'
 - At startup, the game displays an informational welcome and then proceeds directly
   to the first board and move prompt without waiting for separate welcome-screen input.
 - The board displays empty cells numbered 1 through 9 in reading order and displays
@@ -27,7 +28,10 @@ acceptance_criteria:
   same-player prompt.
 - Invalid play-again retry refreshes show the final board, winner/draw summary, scoreboard,
   a validation message, and the play-again prompt.
-- ANSI clear codes are emitted for refreshes even when output is redirected.
+- ANSI clear codes plus redrawn required screen content are emitted for the initial
+  welcome-to-first-board transition, valid non-ending moves, invalid move retries,
+  winning/drawing moves, invalid play-again retries, and play-again yes new-round
+  transitions, even when output is redirected.
 - X and O marks themselves are rendered with ANSI color escape sequences.
 - EOF handling during move and play-again input exits gracefully with status 0 and
   a short message when there is no meaningful input.
@@ -53,9 +57,11 @@ Game scope:
 - Cells are numbered 1-9 in reading order, left-to-right and top-to-bottom.
 
 Terminal/UI behavior:
+- Replace the setup-stage `make run` placeholder with the real playable game.
 - Show an informational welcome screen at program start, then immediately proceed to the first board and move prompt without requiring a separate keypress.
 - Render the board with numbered empty cells and colored X/O marks. Exact colors, wording, and board art are up to Ralph, but X and O marks themselves must be ANSI-colorized.
-- Clear/refresh the screen between turns using ANSI clear codes. Always emit the ANSI clear codes, even when stdout is redirected or non-interactive.
+- Always emit ANSI clear codes for required refresh/redraw transitions, even when stdout is redirected or non-interactive.
+- Required clear-plus-redraw transitions are: initial welcome to first board/move prompt; valid non-ending move to next turn board/prompt; invalid move retry to same board plus validation plus same-player prompt; valid winning/drawing move to final board plus outcome plus scoreboard; invalid play-again retry to final board plus outcome plus scoreboard plus validation plus play-again prompt; play-again `y`/`yes` to new empty board plus X prompt.
 - Prompt the current player for a move, validate input, and keep the same player's turn on invalid moves.
 - Invalid move retry refresh must show the current board, a validation message, and the same-player prompt.
 - After a win or draw, show a clear final presentation containing the final board, the winner or draw summary, and the current session scoreboard.

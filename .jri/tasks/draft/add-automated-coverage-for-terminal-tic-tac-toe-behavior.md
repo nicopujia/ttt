@@ -7,12 +7,13 @@ depends_on:
 acceptance_criteria:
 - Automated Clojure tests cover normal gameplay, wins, draws, invalid moves including
   numeric-looking variants, play-again behavior, exact scoreboard fields/order/count
-  updates/persistence, ANSI clearing, ANSI-colored marks, input trimming, and EOF
-  edge cases described in the task body.
+  updates/persistence, required clear-plus-redraw transitions, ANSI-colored marks,
+  input trimming, and EOF edge cases described in the task body.
 - Tests prove X and O marks themselves include ANSI color escape sequences without
   requiring a specific color choice.
-- Tests prove clear/refresh ANSI clear codes are emitted even when output is captured
-  or redirected.
+- Tests prove clear/refresh ANSI clear codes plus required redrawn screen content
+  are emitted for each required refresh transition even when output is captured or
+  redirected.
 - Tests avoid brittle assertions on exact prose, exact board art, or exact color choices
   except where checking required behavior.
 - '`make check` runs the full automated test suite along with clj-kondo and cljfmt
@@ -36,7 +37,7 @@ Required test coverage:
 - Scoreboard displays exactly `X wins`, `O wins`, and `Draws` in that order; counts start at 0, update after completed rounds, and persist across multiple rounds in one process.
 - Play-again accepts y/yes/n/no case-insensitively with surrounding whitespace ignored.
 - Invalid play-again retry refresh includes final board, outcome summary, scoreboard, validation message, and play-again prompt.
-- ANSI clear codes are emitted even under redirected/non-interactive output.
+- ANSI clear codes plus redrawn required screen content are emitted for the initial welcome-to-first-board transition, valid non-ending moves, invalid move retries, winning/drawing moves, invalid play-again retries, and play-again yes new-round transitions, even under redirected/non-interactive output.
 - X and O marks themselves are ANSI-colorized.
 - EOF during move or play-again exits gracefully with status 0 and a short message when there is no meaningful input.
 - Non-whitespace partial input at EOF is submitted, including valid partial move input that wins/draws or advances to the next turn before graceful exit, valid partial play-again `y`/`yes` and `n`/`no` behavior, and the specified invalid-partial-input-then-immediate-EOF retry behavior.

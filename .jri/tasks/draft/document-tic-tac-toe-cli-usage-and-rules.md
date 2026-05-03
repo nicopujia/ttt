@@ -4,7 +4,6 @@ priority: 3
 assignee: Ralph
 depends_on:
 - implement-complete-terminal-tic-tac-toe-gameplay
-- add-automated-coverage-for-terminal-tic-tac-toe-behavior
 acceptance_criteria:
 - The root README exists and is readable as plain Markdown.
 - The README documents `make run` for playing the game.
