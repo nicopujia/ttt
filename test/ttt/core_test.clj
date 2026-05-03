@@ -120,16 +120,23 @@
       (is (re-find (scoreboard-pattern 2 0 0) output))
       (is (str/includes? output "Thanks for playing."))))
   (testing "invalid play-again refresh retains final board, outcome, scoreboard, validation, and prompt"
-    (let [output (run-game-output "1\n4\n2\n5\n3\n\nmaybe\n n \n")
+    (let [output (run-game-output "1\n4\n2\n5\n3\n\n  \nmaybe\n n \n")
           screens (rendered-screens output)
           invalid-blank-screen (nth screens 6)
-          invalid-text-screen (nth screens 7)]
+          invalid-whitespace-screen (nth screens 7)
+          invalid-text-screen (nth screens 8)]
       (is (has-board? invalid-blank-screen))
       (is (>= (ansi-mark-count invalid-blank-screen) 5))
       (is (str/includes? invalid-blank-screen "Round result: X wins."))
       (is (re-find (scoreboard-pattern 1 0 0) invalid-blank-screen))
       (is (str/includes? invalid-blank-screen "Please answer y/yes/n/no."))
       (is (str/includes? invalid-blank-screen "Play again? (y/yes/n/no): "))
+      (is (has-board? invalid-whitespace-screen))
+      (is (>= (ansi-mark-count invalid-whitespace-screen) 5))
+      (is (str/includes? invalid-whitespace-screen "Round result: X wins."))
+      (is (re-find (scoreboard-pattern 1 0 0) invalid-whitespace-screen))
+      (is (str/includes? invalid-whitespace-screen "Please answer y/yes/n/no."))
+      (is (str/includes? invalid-whitespace-screen "Play again? (y/yes/n/no): "))
       (is (has-board? invalid-text-screen))
       (is (>= (ansi-mark-count invalid-text-screen) 5))
       (is (str/includes? invalid-text-screen "Round result: X wins."))
@@ -194,16 +201,20 @@
       (is (str/includes? (second screens) "Enter an open cell using exactly 1 through 9."))
       (is (str/includes? (second screens) "Player X, choose a cell (1-9): "))
       (is (str/includes? output "EOF received. Exiting."))))
-  (testing "valid partial EOF play-again yes starts a new round, then the immediate EOF exits"
-    (let [output (run-game-output "1\n4\n2\n5\n3\ny")
-          screens (rendered-screens output)]
-      (is (= 7 (clear-screen-count output)))
-      (is (str/includes? (last screens) "Player X, choose a cell (1-9): "))
-      (is (str/includes? output "EOF received. Exiting."))))
-  (testing "valid partial EOF play-again no uses the normal goodbye path"
-    (let [output (run-game-output "1\n4\n2\n5\n3\nNo")]
-      (is (str/includes? output "Thanks for playing."))
-      (is (not (str/includes? output "EOF received. Exiting.")))))
+  (testing "valid partial EOF play-again y and yes start a new round, then the immediate EOF exits"
+    (doseq [input ["1\n4\n2\n5\n3\ny"
+                   "1\n4\n2\n5\n3\nyes"]]
+      (let [output (run-game-output input)
+            screens (rendered-screens output)]
+        (is (= 7 (clear-screen-count output)))
+        (is (str/includes? (last screens) "Player X, choose a cell (1-9): "))
+        (is (str/includes? output "EOF received. Exiting.")))))
+  (testing "valid partial EOF play-again n and no use the normal goodbye path"
+    (doseq [input ["1\n4\n2\n5\n3\nn"
+                   "1\n4\n2\n5\n3\nNo"]]
+      (let [output (run-game-output input)]
+        (is (str/includes? output "Thanks for playing."))
+        (is (not (str/includes? output "EOF received. Exiting."))))))
   (testing "invalid partial EOF play-again retries normally before the immediate EOF exit"
     (let [output (run-game-output "1\n4\n2\n5\n3\nmaybe")
           screens (rendered-screens output)]
